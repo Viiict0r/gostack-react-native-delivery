@@ -1,3 +1,4 @@
+/* eslint-disable dot-notation */
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 
@@ -43,6 +44,11 @@ interface Category {
   image_url: string;
 }
 
+interface ParamsProps {
+  name_like?: string;
+  category_like?: number;
+}
+
 const Dashboard: React.FC = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -55,11 +61,29 @@ const Dashboard: React.FC = () => {
 
   async function handleNavigate(id: number): Promise<void> {
     // Navigate do ProductDetails page
+    navigation.navigate('FoodDetails', { id });
   }
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
+      const params: ParamsProps = {};
+
+      if (selectedCategory) {
+        params.category_like = selectedCategory;
+      }
+
+      if (searchValue) {
+        params.name_like = searchValue;
+      }
+
       // Load Foods from API
+      api
+        .get('/foods', {
+          params,
+        })
+        .then(response => {
+          setFoods(response.data);
+        });
     }
 
     loadFoods();
@@ -68,6 +92,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     async function loadCategories(): Promise<void> {
       // Load categories from API
+      api.get('/categories').then(response => setCategories(response.data));
     }
 
     loadCategories();
@@ -75,6 +100,7 @@ const Dashboard: React.FC = () => {
 
   function handleSelectCategory(id: number): void {
     // Select / deselect category
+    setSelectedCategory(selectedCategory === id ? undefined : id);
   }
 
   return (
